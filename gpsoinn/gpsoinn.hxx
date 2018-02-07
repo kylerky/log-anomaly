@@ -1,4 +1,7 @@
-#include "graph/graph.hxx"
+#ifndef LOG_ANOMALY_GPSOINN_HXX
+#define LOG_ANOMALY_GPSOINN_HXX
+
+#include "../graph/graph.hxx"
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
 #include <algorithm>
@@ -6,7 +9,7 @@
 #include <cmath>
 #include <random>
 
-namespace GPSOINN {
+namespace LogAnomaly {
 
 template <unsigned dimension> class GPNet {
     static_assert(dimension > 0, "Dimension must be above 0");
@@ -42,9 +45,9 @@ template <unsigned dimension> class GPNet {
     std::pair<float, float> threshold(size_t index, const NodeVector &x_vector);
 }; // class GPNet
 
-} // namespace GPSOINN
+} // namespace LogAnomaly
 
-namespace GPSOINN {
+namespace LogAnomaly {
 
 template <unsigned dimension>
 GPNet<dimension>::GPNet(unsigned lambda, unsigned age_max, unsigned k,
@@ -148,7 +151,7 @@ template <unsigned dimension> void GPNet<dimension>::train(array &data) {
                 ++iter;
         }
     }
-} // namespace GPSOINN
+} // namespace LogAnomaly
 
 template <unsigned dimension>
 std::pair<float, float>
@@ -284,4 +287,6 @@ template <unsigned dimension> float GPNet<dimension>::predict(array &data) {
         prob /= wins;
     return prob;
 }
-} // namespace GPSOINN
+} // namespace LogAnomaly
+
+#endif // LOG_ANOMALY_GPSOINN_HXX

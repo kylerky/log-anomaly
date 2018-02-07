@@ -1,12 +1,12 @@
-#ifndef GPSOINN_MULTISET_HXX
-#define GPSOINN_MULTISET_HXX
+#ifndef LOG_ANOMALY_MULTISET_HXX
+#define LOG_ANOMALY_MULTISET_HXX
 
 #include <cstring>
 #include <functional>
 #include <iterator>
 #include <vector>
 
-namespace GPSOINN {
+namespace LogAnomaly {
 
 template <size_t... args> struct static_max;
 
@@ -182,9 +182,9 @@ class multiset
     size_type first_free = 0;
 };
 
-} // namespace GPSOINN
+} // namespace LogAnomaly
 
-namespace GPSOINN {
+namespace LogAnomaly {
 
 template <typename Key, typename Compare, typename Allocator>
 class multiset<Key, Compare, Allocator>::iterator {
@@ -539,6 +539,6 @@ typename multiset<Key, Compare, Allocator>::value_type const &
     return vector::operator[](index);
 }
 
-} // namespace GPSOINN
+} // namespace LogAnomaly
 
-#endif // GPSOINN_MULTISET_HXX
+#endif // LOG_ANOMALY_MULTISET_HXX

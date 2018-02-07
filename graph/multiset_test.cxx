@@ -1,10 +1,10 @@
 #include "multiset.hxx"
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 #include <iostream>
 #include <random>
 #include <unordered_set>
 
-using namespace GPSOINN;
+using namespace LogAnomaly;
 
 #define SEQ_ELEM_CNT 5000
 #define RAND_ERASE_TRY_CNT 10

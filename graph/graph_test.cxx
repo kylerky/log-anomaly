@@ -1,8 +1,8 @@
 #include "graph.hxx"
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 #include <iostream>
 
-using namespace GPSOINN;
+using namespace LogAnomaly;
 
 TEST(basic, init) {
     Digraph<unsigned, int> graph;

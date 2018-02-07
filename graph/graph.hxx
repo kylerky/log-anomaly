@@ -1,5 +1,5 @@
-#ifndef GPSOINN_GRAPH_HXX
-#define GPSOINN_GRAPH_HXX
+#ifndef LOG_ANOMALY_GRAPH_HXX
+#define LOG_ANOMALY_GRAPH_HXX
 
 #include "multiset.hxx"
 #include <algorithm>
@@ -8,7 +8,7 @@
 #include <unordered_set>
 #include <utility>
 
-namespace GPSOINN {
+namespace LogAnomaly {
 
 template <typename ValueT, typename WeightT,
           typename Compare = std::less<ValueT>,
@@ -270,9 +270,9 @@ class UndirectedGraph : protected Digraph<ValueT, WeightT, Compare, Allocator> {
     [[nodiscard]] bool empty() const noexcept { return Digraph::empty(); }
 };
 
-} // namespace GPSOINN
+} // namespace LogAnomaly
 
-namespace GPSOINN {
+namespace LogAnomaly {
 
 template <typename ValueT, typename WeightT, typename Compare,
           typename Allocator>
@@ -408,6 +408,6 @@ UndirectedGraph<ValueT, WeightT, Compare, Allocator>::erase_after_edge(
     return result;
 }
 
-} // namespace GPSOINN
+} // namespace LogAnomaly
 
-#endif // GPSOINN_GRAPH_HXX
+#endif // LOG_ANOMALY_GRAPH_HXX
