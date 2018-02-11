@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 2.8.2)
-project (gpsoinn)
+project (log_anomaly)
 
 # Download and unpack googletest at configure time
 configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
@@ -33,13 +33,14 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
   include_directories("${gtest_SOURCE_DIR}/include")
 endif()
 
-set(sub_dirs graph)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+
+set(sub_dirs graph journal)
+
+
+find_package(Eigen3 REQUIRED NO_MODULE)
+find_package(Systemd REQUIRED)
 
 foreach(dir ${sub_dirs})
     add_subdirectory(${dir})
 endforeach(dir ${sub_dirs})
-
-find_package(Eigen3 REQUIRED NO_MODULE)
-
-add_executable(main main.cxx)
-target_link_libraries(main Eigen3::Eigen)

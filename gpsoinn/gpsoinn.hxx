@@ -34,13 +34,13 @@ template <unsigned dimension> class GPNet {
     float predict(array &data);
 
   private:
-    UGraph graph;
-    float sigma_2;
-    unsigned local_opt_coeff = 100;
-    unsigned age_max;
-    unsigned lambda;
-    unsigned k;
-    unsigned cycles = 0;
+    UGraph m_graph;
+    float m_sigma_2;
+    unsigned m_local_opt_coeff = 100;
+    unsigned m_age_max;
+    unsigned m_lambda;
+    unsigned m_k;
+    unsigned m_cycles = 0;
 
     std::pair<float, float> threshold(size_t index, const NodeVector &x_vector);
 }; // class GPNet
@@ -52,19 +52,19 @@ namespace LogAnomaly {
 template <unsigned dimension>
 GPNet<dimension>::GPNet(unsigned lambda, unsigned age_max, unsigned k,
                         float sigma_2)
-    : lambda(lambda), age_max(age_max), k(k), sigma_2(sigma_2) {
-    graph.insert_vertex(Node{.vector = NodeVector::Random(), .win_count = 0});
-    graph.insert_vertex(Node{.vector = NodeVector::Random(), .win_count = 0});
+    : m_lambda(lambda), m_age_max(age_max), m_k(k), m_sigma_2(sigma_2) {
+    m_graph.insert_vertex(Node{.vector = NodeVector::Random(), .win_count = 0});
+    m_graph.insert_vertex(Node{.vector = NodeVector::Random(), .win_count = 0});
 }
 
 template <unsigned dimension> void GPNet<dimension>::train(array &data) {
     using namespace Eigen;
     using NodeM = Matrix<float, dimension, Dynamic>;
 
-    if (graph.vertex_count() < 2) {
-        graph.insert_vertex(
+    if (m_graph.vertex_count() < 2) {
+        m_graph.insert_vertex(
             Node{.vector = NodeVector::Random(), .win_count = 0});
-        graph.insert_vertex(
+        m_graph.insert_vertex(
             Node{.vector = NodeVector::Random(), .win_count = 0});
     }
     // std::random_device rand_dev;
@@ -75,10 +75,10 @@ template <unsigned dimension> void GPNet<dimension>::train(array &data) {
 
     {
         // construct the data matrix
-        NodeM nodes(dimension, graph.vertex_count());
+        NodeM nodes(dimension, m_graph.vertex_count());
 
         size_t col = 0;
-        for (auto &node : graph) {
+        for (auto &node : m_graph) {
             nodes.col(col) = node.value().vector;
             ++col;
         }
@@ -101,8 +101,8 @@ template <unsigned dimension> void GPNet<dimension>::train(array &data) {
         }
     }
 
-    auto min_iter = graph.begin();
-    auto min2_iter = graph.begin();
+    auto min_iter = m_graph.begin();
+    auto min2_iter = m_graph.begin();
     for (size_t i = 0; i != min_index; ++i)
         ++min_iter;
     for (size_t i = 0; i != min2_index; ++i)
@@ -112,7 +112,7 @@ template <unsigned dimension> void GPNet<dimension>::train(array &data) {
     auto[threshold2, prob2] = threshold(min2_index, input);
 
     if ((prob1 > prob2 && prob1 > threshold1) || prob2 > threshold2) {
-        graph.insert_edge(min_iter, min2_iter, 0);
+        m_graph.insert_edge(min_iter, min2_iter, 0);
 
         auto &win_count = min_iter->value().win_count;
         NodeVector &winner_vec = min_iter->value().vector;
@@ -120,17 +120,17 @@ template <unsigned dimension> void GPNet<dimension>::train(array &data) {
         winner_vec.array() += ((input - winner_vec).array() / (win_count + 1));
 
         for (auto &edge : *min_iter) {
-            NodeVector &node_vec = graph[edge.head].value().vector;
-            node_vec.array() += ((input - node_vec).array() / local_opt_coeff /
+            NodeVector &node_vec = m_graph[edge.head].value().vector;
+            node_vec.array() += ((input - node_vec).array() / m_local_opt_coeff /
                                  (win_count + 1));
             ++edge.weight;
         }
 
-        for (auto niter = graph.cbegin(); niter != graph.cend(); ++niter) {
+        for (auto niter = m_graph.cbegin(); niter != m_graph.cend(); ++niter) {
             for (auto edge = niter->cbegin(), pre = niter->cbefore_begin();
                  edge != niter->cend();) {
-                if (edge->weight > age_max) {
-                    edge = graph.erase_after_edge(niter, pre);
+                if (edge->weight > m_age_max) {
+                    edge = m_graph.erase_after_edge(niter, pre);
                 } else {
                     ++edge;
                     ++pre;
@@ -138,15 +138,15 @@ template <unsigned dimension> void GPNet<dimension>::train(array &data) {
             }
         }
     } else {
-        graph.insert_vertex(Node{.vector = input, .win_count = 0});
+        m_graph.insert_vertex(Node{.vector = input, .win_count = 0});
     }
 
-    ++cycles;
-    if (cycles == lambda) {
-        cycles = 0;
-        for (auto iter = graph.cbegin(); iter != graph.cend();) {
-            if (std::distance(iter->cbegin(), iter->cend()) < k)
-                iter = graph.erase_vertex(iter);
+    ++m_cycles;
+    if (m_cycles == m_lambda) {
+        m_cycles = 0;
+        for (auto iter = m_graph.cbegin(); iter != m_graph.cend();) {
+            if (std::distance(iter->cbegin(), iter->cend()) < m_k)
+                iter = m_graph.erase_vertex(iter);
             else
                 ++iter;
         }
@@ -160,7 +160,7 @@ GPNet<dimension>::threshold(size_t index, const NodeVector &x_vector) {
 
     Matrix<float, dimension, dimension> local_cov;
     local_cov.setZero();
-    auto iter = graph.begin();
+    auto iter = m_graph.begin();
     for (size_t i = 0; i != index; ++i)
         ++iter;
 
@@ -168,7 +168,7 @@ GPNet<dimension>::threshold(size_t index, const NodeVector &x_vector) {
     size_t win_sum = 0;
     size_t neighbour_cnt = 0;
     for (auto edge : *iter) {
-        NodeVector &node_vec = graph[edge.head].value().vector;
+        NodeVector &node_vec = m_graph[edge.head].value().vector;
         local_cov.array() +=
             ((node_vec - winner_vec) * (node_vec - winner_vec).transpose())
                 .array() *
@@ -178,7 +178,7 @@ GPNet<dimension>::threshold(size_t index, const NodeVector &x_vector) {
     }
     if (win_sum)
         local_cov.array() /= win_sum;
-    local_cov += MatrixXf::Identity(dimension, dimension) * sigma_2;
+    local_cov += MatrixXf::Identity(dimension, dimension) * m_sigma_2;
 
     // if (neighbour_cnt > dimension) {
     //     Matrix<bool, dimension, 1> comp;
@@ -219,7 +219,7 @@ GPNet<dimension>::threshold(size_t index, const NodeVector &x_vector) {
         eigens.eigenvectors().transpose();
     if (neighbour_cnt) {
         for (auto edge : *iter) {
-            NodeVector &node_vec = graph[edge.head].value().vector;
+            NodeVector &node_vec = m_graph[edge.head].value().vector;
             float prob = std::exp(-((x_vector - node_vec).transpose() *
                                     cov_inv * (x_vector - node_vec))(0) /
                                   2) /
@@ -247,12 +247,12 @@ template <unsigned dimension> float GPNet<dimension>::predict(array &data) {
 
     float prob = 0;
     size_t wins = 0;
-    for (auto &node : graph) {
+    for (auto &node : m_graph) {
         Matrix<float, dimension, dimension> local_cov;
         local_cov.setZero();
         size_t win_sum = 0;
         for (auto edge : node) {
-            NodeVector &edge_vec = graph[edge.head].value().vector;
+            NodeVector &edge_vec = m_graph[edge.head].value().vector;
             NodeVector &node_vec = node.value().vector;
             local_cov.array() +=
                 ((edge_vec - node_vec) * (edge_vec - node_vec).transpose())
@@ -262,7 +262,7 @@ template <unsigned dimension> float GPNet<dimension>::predict(array &data) {
         }
         if (win_sum)
             local_cov.array() /= win_sum;
-        local_cov += MatrixXf::Identity(dimension, dimension) * sigma_2;
+        local_cov += MatrixXf::Identity(dimension, dimension) * m_sigma_2;
 
         SelfAdjointEigenSolver<Matrix<float, dimension, dimension>> eigens(
             local_cov);
