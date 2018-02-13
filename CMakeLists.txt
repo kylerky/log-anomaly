@@ -41,6 +41,8 @@ set(sub_dirs graph journal)
 find_package(Eigen3 REQUIRED NO_MODULE)
 find_package(Systemd REQUIRED)
 
+include_directories(${CMAKE_SOURCE_DIR})
+
 foreach(dir ${sub_dirs})
     add_subdirectory(${dir})
 endforeach(dir ${sub_dirs})

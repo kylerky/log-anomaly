@@ -5,7 +5,6 @@ extern "C" {
 #include <systemd/sd-journal.h>
 }
 #include <bitset>
-#include <cstring>
 #include <string>
 #include <system_error>
 #include <utility>
@@ -79,6 +78,36 @@ class SDJournal {
     journal_state rdstate() const { return m_states.to_ulong(); }
 
     explicit operator bool() const noexcept { return good(); }
+
+    typedef std::string journalpos;
+    journalpos tellg() {
+        using std::generic_category;
+        using std::string;
+        using std::system_error;
+
+        char *c_str;
+        int result = sd_journal_get_cursor(m_context, &c_str);
+        if (result < 0) {
+            throw system_error(-result, generic_category(),
+                               "Failed to get cursor");
+        }
+
+        string str(c_str);
+        free(c_str);
+        return str;
+    }
+
+    SDJournal &seekg(journalpos pos) {
+        using std::generic_category;
+        using std::system_error;
+
+        int result = sd_journal_seek_cursor(m_context, pos.data());
+        if (result < 0) {
+            throw system_error(-result, generic_category(),
+                               "Failed to seek to the position");
+        }
+        return *this;
+    }
 
   private:
     sd_journal *m_context = nullptr;

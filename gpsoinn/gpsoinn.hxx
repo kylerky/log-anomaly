@@ -1,7 +1,7 @@
 #ifndef LOG_ANOMALY_GPSOINN_HXX
 #define LOG_ANOMALY_GPSOINN_HXX
 
-#include "../graph/graph.hxx"
+#include "graph/graph.hxx"
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
 #include <algorithm>
@@ -67,8 +67,8 @@ template <unsigned dimension> void GPNet<dimension>::train(array &data) {
         m_graph.insert_vertex(
             Node{.vector = NodeVector::Random(), .win_count = 0});
     }
-    // std::random_device rand_dev;
-    // std::srand(rand_dev());
+    std::random_device rand_dev;
+    std::srand(rand_dev());
 
     typename NodeM::Index min_index, min2_index;
     Map<NodeVector> input(data.data());
