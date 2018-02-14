@@ -160,7 +160,7 @@ class Digraph {
   private:
     inline typename set_type::iterator
     iter_remove_c(typename set_type::const_iterator citer) {
-        index_t tail_pos = vertices.get_index(citer);
+        index_t tail_pos = citer.index();
         return vertices.get_iterator(tail_pos);
     }
 };
@@ -280,7 +280,7 @@ typename Digraph<ValueT, WeightT, Compare, Allocator>::vertex_iterator
 Digraph<ValueT, WeightT, Compare, Allocator>::erase_vertex(
     const_vertex_iterator pos) {
     typename set_type::const_iterator &iter = pos;
-    auto index = vertices.get_index(iter);
+    auto index = iter.index();
     auto result = vertices.erase(iter);
     for (auto &vertex : vertices) {
         auto pre = vertex.edges.cbefore_begin();
@@ -305,7 +305,7 @@ Digraph<ValueT, WeightT, Compare, Allocator>::erase_vertex(
     typename set_type::const_iterator &end_iter = end;
     std::unordered_set<index_t> indices;
     for (auto iter = beg_iter; iter != end_iter; ++iter) {
-        indices.insert(vertices.get_index(iter));
+        indices.insert(iter.index());
     }
     auto result = vertices.erase(beg_iter, end_iter);
     for (auto &vertex : vertices) {
@@ -328,7 +328,7 @@ Digraph<ValueT, WeightT, Compare, Allocator>::erase_vertex(const ValueT &key) {
     std::unordered_set<index_t> indices;
     for (auto iter = vertices.cbegin(); iter != vertices.cend(); ++iter) {
         if (iter->value() == key)
-            indices.insert(vertices.get_index(iter));
+            indices.insert(iter.index());
     }
 
     for (auto index : indices)
@@ -357,7 +357,7 @@ void Digraph<ValueT, WeightT, Compare, Allocator>::insert_edge(
     auto tail_iter = iter_remove_c(ctail_iter);
 
     tail_iter->edges.push_front(
-        {.weight = weight, .head = vertices.get_index(head_iter)});
+        {.weight = weight, .head = head_iter.index()});
 }
 
 template <typename ValueT, typename WeightT, typename Compare,
@@ -396,7 +396,7 @@ UndirectedGraph<ValueT, WeightT, Compare, Allocator>::erase_after_edge(
     auto result = Digraph::erase_after_edge(v1, edge);
     auto v2 = get_vertex_iterator(target->head);
     if (v1 != v2) {
-        index_t index = get_index(v1);
+        index_t index = v1.index();
         for (auto iter = v2->cbegin(), pre = v2->cbefore_begin();
              iter != v2->cend(); ++iter, ++pre) {
             if (iter->head == index && iter->weight == target->weight) {

@@ -237,6 +237,8 @@ class multiset<Key, Compare, Allocator>::iterator {
         return previous;
     }
 
+    size_type index() { return iter - vector->begin(); }
+
   private:
     typename vector::iterator iter;
     const vector *vector;
@@ -296,6 +298,7 @@ class multiset<Key, Compare, Allocator>::const_iterator {
         return previous;
     }
 
+    size_type index() { return iter - vector->cbegin(); }
   private:
     typename vector::const_iterator iter;
     const vector *vector;

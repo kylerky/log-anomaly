@@ -35,7 +35,7 @@ endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-set(sub_dirs graph journal)
+set(sub_dirs graph journal detection)
 
 
 find_package(Eigen3 REQUIRED NO_MODULE)
