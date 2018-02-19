@@ -142,10 +142,9 @@ class Digraph {
     const_vertex_iterator get_vertex_iterator(index_t index) const {
         return vertices.get_iterator(index);
     }
-    Vertex &operator[](index_t index) { return *get_vertex_iterator(index); }
-    const Vertex &operator[](index_t index) const {
-        return *get_vertex_iterator(index);
-    }
+    Vertex &operator[](index_t index) { return vertices[index]; }
+    const Vertex &operator[](index_t index) const { return vertices[index]; }
+    bool valid(index_t index) const { return vertices.valid(index); }
 
     //
     void clear() noexcept { vertices.clear(); }
@@ -261,6 +260,7 @@ class UndirectedGraph : protected Digraph<ValueT, WeightT, Compare, Allocator> {
     typename Digraph::Vertex const &operator[](index_t index) const {
         return Digraph::operator[](index);
     }
+    bool valid(index_t index) const { return Digraph::valid(index); }
 
     //
     void clear() noexcept { Digraph::clear(); }
@@ -356,8 +356,7 @@ void Digraph<ValueT, WeightT, Compare, Allocator>::insert_edge(
     typename set_type::const_iterator &head_iter = head;
     auto tail_iter = iter_remove_c(ctail_iter);
 
-    tail_iter->edges.push_front(
-        {.weight = weight, .head = head_iter.index()});
+    tail_iter->edges.push_front({.weight = weight, .head = head_iter.index()});
 }
 
 template <typename ValueT, typename WeightT, typename Compare,

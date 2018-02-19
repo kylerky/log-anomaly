@@ -18,7 +18,12 @@ TEST(Digraph, insert_vertex) {
     {
         auto iter = graph.cbegin();
         for (unsigned i = 0; i != 4; ++i, ++iter) {
+            EXPECT_EQ(i, graph[i].value());
             EXPECT_EQ(i, iter->value());
+        }
+        for (unsigned i = 0; i != 4; ++i) {
+            graph[i].value() = 0;
+            EXPECT_EQ(graph[i].value(), 0);
         }
     }
 }

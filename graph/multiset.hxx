@@ -164,6 +164,10 @@ class multiset
 
     allocator_type get_allocator() const { return vector::get_allocator(); };
 
+    bool valid(size_type index) const {
+        return vector::operator[](index).second();
+    }
+
     // iterators
     iterator begin() noexcept;
     const_iterator begin() const noexcept;
@@ -299,6 +303,7 @@ class multiset<Key, Compare, Allocator>::const_iterator {
     }
 
     size_type index() { return iter - vector->cbegin(); }
+
   private:
     typename vector::const_iterator iter;
     const vector *vector;
@@ -534,12 +539,12 @@ multiset<Key, Compare, Allocator>::get_iterator(size_type index) const
 template <typename Key, typename Compare, typename Allocator>
 typename multiset<Key, Compare, Allocator>::value_type &
     multiset<Key, Compare, Allocator>::operator[](size_type index) {
-    return vector::operator[](index);
+    return vector::operator[](index).template get<Key>();
 }
 template <typename Key, typename Compare, typename Allocator>
 typename multiset<Key, Compare, Allocator>::value_type const &
     multiset<Key, Compare, Allocator>::operator[](size_type index) const {
-    return vector::operator[](index);
+    return vector::operator[](index).template get<Key>();
 }
 
 } // namespace LogAnomaly
