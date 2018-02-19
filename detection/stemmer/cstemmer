@@ -1,0 +1,30 @@
+#ifndef LOG_ANOMALY_CSTEMMER
+#define LOG_ANOMALY_CSTEMMER
+
+#include <string>
+#include <system_error>
+namespace LogAnomaly {
+namespace {
+#include "stemmer.h"
+} // namespace
+
+namespace PorterStemmer {
+
+inline std::string stem(std::string str) {
+    using std::generic_category;
+    using std::system_error;
+
+    auto stemmer = create_stemmer();
+    if (!stemmer)
+        throw system_error(errno, generic_category(),
+                           "Failed to create stemmer");
+    int size = stem_c(stemmer, str.data(), str.size() - 1);
+    str.resize(size + 1);
+
+    return str;
+}
+
+} // namespace PorterStemmer
+
+} // namespace LogAnomaly
+#endif // LOG_ANOMALY_CSTEMMER
