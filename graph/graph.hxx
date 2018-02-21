@@ -2,6 +2,10 @@
 #define LOG_ANOMALY_GRAPH_HXX
 
 #include "multiset.hxx"
+
+#include "cereal/types/forward_list.hpp"
+#include "cereal/types/polymorphic.hpp"
+
 #include <algorithm>
 #include <forward_list>
 #include <functional>
@@ -21,12 +25,21 @@ class Digraph {
         using std::swap;
         swap(left.vertices, right.vertices);
     }
+    template <typename Archive>
+    friend void serialize(Archive &archive, Digraph &graph) {
+        archive(graph.vertices);
+    }
 
     // edge node
     struct EdgeNode {
         WeightT weight;
         index_t head;
     };
+    template <typename Archive>
+    friend void serialize(Archive &archive, EdgeNode &node) {
+        archive(node.weight, node.head);
+    }
+
     typedef typename std::forward_list<EdgeNode>::iterator edge_iterator;
     typedef typename std::forward_list<EdgeNode>::const_iterator
         const_edge_iterator;
@@ -34,6 +47,10 @@ class Digraph {
     // class Vertex
     class Vertex {
         friend Digraph;
+        template <typename Archive>
+        friend void serialize(Archive &archive, Vertex &ver) {
+            archive(ver.val, ver.edges);
+        }
 
       public:
         edge_iterator begin() noexcept { return edges.begin(); }
@@ -166,7 +183,7 @@ class Digraph {
 template <typename ValueT, typename WeightT,
           typename Compare = std::less<ValueT>,
           typename Allocator = std::allocator<ValueT>>
-class UndirectedGraph : protected Digraph<ValueT, WeightT, Compare, Allocator> {
+class UndirectedGraph : public Digraph<ValueT, WeightT, Compare, Allocator> {
   private:
     using Digraph = Digraph<ValueT, WeightT, Compare, Allocator>;
 
@@ -191,8 +208,13 @@ class UndirectedGraph : protected Digraph<ValueT, WeightT, Compare, Allocator> {
     UndirectedGraph(const UndirectedGraph &other) = default;
     UndirectedGraph(UndirectedGraph &&other) = default;
 
+    friend cereal::base_class<Digraph>;
+    template <typename Archive>
+    friend void serialize(Archive &archive, UndirectedGraph &graph) {
+        archive(cereal::base_class<Digraph>(&graph));
+    }
     // destructors
-    ~UndirectedGraph() {}
+    virtual ~UndirectedGraph() {}
 
     // swap
     friend void swap(UndirectedGraph &left, UndirectedGraph &right) noexcept {

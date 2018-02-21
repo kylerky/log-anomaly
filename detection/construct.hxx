@@ -8,10 +8,17 @@
 #include "journal/sd_journal.hxx"
 #include "stemmer/cstemmer"
 
+#include "cereal/archives/binary.hpp"
+
+#include "cereal/types/deque.hpp"
+#include "cereal/types/unordered_map.hpp"
+#include "cereal/types/utility.hpp"
+
 #include <algorithm>
 #include <cctype>
 #include <cmath>
 #include <deque>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -83,8 +90,7 @@ struct Message {
     float variance;
 };
 struct ClusterInfo {
-    typedef std::vector<std::unordered_map<std::string, size_t>::iterator>
-        vector;
+    typedef std::vector<std::string> vector;
     typedef std::unique_ptr<LogAnomaly::GPNet<0>> P_GPNet;
     vector tokens;
     P_GPNet gpnet;
@@ -92,14 +98,15 @@ struct ClusterInfo {
 
 std::pair<std::vector<double>, unsigned> construct_gpnet_input(
     std::unordered_map<std::string, size_t> const &map,
-    std::unordered_map<std::string, size_t> &word_map,
-    LogAnomaly::UndirectedGraph<std::pair<unsigned, unsigned>, size_t> const &word_graph,
+    std::unordered_map<std::string, size_t> const &word_map,
+    LogAnomaly::UndirectedGraph<std::pair<unsigned, unsigned>, size_t> const
+        &word_graph,
     std::unordered_map<unsigned, ClusterInfo> &clusters);
 
-constexpr unsigned block_number = 4;
-constexpr unsigned block_size = 3000;
-constexpr float vertex_fade_coeff = 2.0;
-constexpr float edge_fade_coeff = 1.5;
+constexpr unsigned block_number = 5;
+constexpr unsigned block_size = 2500;
+constexpr float vertex_fade_coeff = 2.5;
+constexpr float edge_fade_coeff = 4;
 constexpr unsigned vertex_fade_threshold = 1;
 constexpr unsigned edge_fade_threshold = 1;
 
@@ -115,4 +122,11 @@ void fade_out(std::unordered_map<std::string, size_t> &word_map,
                   &word_graph);
 
 } // namespace
+CEREAL_REGISTER_TYPE(
+    LogAnomaly::UndirectedGraph<
+        LogAnomaly::GPNet<0>::Node, unsigned,
+        std::less<LogAnomaly::GPNet<0>::NodeVector>,
+        Eigen::aligned_allocator<LogAnomaly::GPNet<0>::NodeVector>>);
+CEREAL_REGISTER_TYPE(
+    LogAnomaly::UndirectedGraph<std::pair<unsigned, unsigned>, size_t>);
 #endif // LOG_ANOMALY_CONSTRUCT_HXX

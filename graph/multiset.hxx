@@ -1,6 +1,11 @@
 #ifndef LOG_ANOMALY_MULTISET_HXX
 #define LOG_ANOMALY_MULTISET_HXX
 
+#include "cereal/types/base_class.hpp"
+
+#include "cereal/types/string.hpp"
+#include "cereal/types/vector.hpp"
+
 #include <cstring>
 #include <functional>
 #include <iterator>
@@ -22,6 +27,29 @@ struct static_max<arg1, arg2, others...> {
 };
 
 template <typename T, typename T_2> struct multiset_variant {
+    // serialization
+    template <typename Archive>
+    friend void save(Archive &archive, multiset_variant const &variant) {
+        archive(variant.bit);
+        if (variant.bit)
+            archive(variant.get<T_2>());
+        else
+            archive(variant.get<T>());
+    }
+    template <typename Archive>
+    friend void load(Archive &archive, multiset_variant &variant) {
+        archive(variant.bit);
+        if (variant.bit) {
+            T_2 data;
+            archive(data);
+            new (&variant.data) T_2(std::move(data));
+        } else {
+            T data;
+            archive(data);
+            new (&variant.data) T(std::move(data));
+        }
+    }
+
   private:
     using data_t = typename std::aligned_storage<
         static_max<sizeof(T), sizeof(T_2)>::value,
@@ -135,7 +163,13 @@ class multiset
         swap(first.count, second.count);
         swap(first.first_free, second.first_free);
     }
-    /* destructors */
+    friend cereal::base_class<vector>;
+    template <typename Archive>
+    friend void serialize(Archive &archive, multiset &set) {
+        archive(cereal::base_class<vector>(&set), set.less, set.count,
+                set.first_free);
+    }
+   /* destructors */
     virtual ~multiset() = default;
 
     /* modifiers */

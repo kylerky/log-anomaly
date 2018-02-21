@@ -2,6 +2,9 @@
 #define LOG_ANOMALY_GPSOINN_HXX
 
 #include "graph/graph.hxx"
+
+#include "cereal/access.hpp"
+
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
 #include <algorithm>
@@ -41,7 +44,8 @@ template <unsigned dimension> class GPNet {
     unsigned m_cycles = 0;
     const double m_const_coeff;
 
-    std::pair<double, double> threshold(size_t index, const NodeVector &x_vector);
+    std::pair<double, double> threshold(size_t index,
+                                        const NodeVector &x_vector);
 }; // class GPNet
 
 } // namespace LogAnomaly
@@ -220,9 +224,9 @@ GPNet<dimension>::threshold(size_t index, const NodeVector &x_vector) {
         for (auto edge : *iter) {
             NodeVector &node_vec = m_graph[edge.head].value().vector;
             double prob = std::exp(-((x_vector - node_vec).transpose() *
-                                    cov_inv * (x_vector - node_vec))(0) /
-                                  2) /
-                         m_const_coeff / determinant_sqrt;
+                                     cov_inv * (x_vector - node_vec))(0) /
+                                   2) /
+                          m_const_coeff / determinant_sqrt;
 
             if (prob < threshold)
                 threshold = prob;
@@ -231,9 +235,9 @@ GPNet<dimension>::threshold(size_t index, const NodeVector &x_vector) {
         threshold = 0.55;
 
     double xprob = std::exp(-((x_vector - winner_vec).transpose() * cov_inv *
-                             (x_vector - winner_vec))(0) /
-                           2) /
-                  m_const_coeff / determinant_sqrt;
+                              (x_vector - winner_vec))(0) /
+                            2) /
+                   m_const_coeff / determinant_sqrt;
     return {
         threshold,
         xprob,
@@ -273,9 +277,9 @@ template <unsigned dimension> double GPNet<dimension>::predict(array &data) {
 
         NodeVector &node_vec = node.value().vector;
         double xprob = std::exp(-((input - node_vec).transpose() * cov_inv *
-                                 (input - node_vec))(0) /
-                               2) /
-                      m_const_coeff / determinant_sqrt;
+                                  (input - node_vec))(0) /
+                                2) /
+                       m_const_coeff / determinant_sqrt;
         prob += xprob * node.value().win_count;
         wins += node.value().win_count;
     }
@@ -287,16 +291,30 @@ template <unsigned dimension> double GPNet<dimension>::predict(array &data) {
 
 // specialization
 template <> class GPNet<0> {
-  private:
+  public:
     typedef Eigen::Matrix<double, Eigen::Dynamic, 1> NodeVector;
     struct Node {
         NodeVector vector;
         size_t win_count;
     };
+
+  private:
     typedef std::vector<double> vector_d;
     typedef UndirectedGraph<Node, unsigned, std::less<NodeVector>,
                             Eigen::aligned_allocator<NodeVector>>
         UGraph;
+
+    template <typename Archive>
+    friend void serialize(Archive &archive, Node &node) {
+        archive(node.vector, node.win_count);
+    }
+
+    template <typename Archive>
+    friend void serialize(Archive &archive, GPNet<0> &net) {
+        archive(net.m_graph, net.m_sigma_2, net.m_local_opt_coeff,
+                net.m_age_max, net.m_lambda, net.m_k, net.m_cycles,
+                net.m_const_coeff, net.m_dimension);
+    }
 
   public:
     GPNet(unsigned dimension = 1, unsigned lambda = 20000,
@@ -314,10 +332,11 @@ template <> class GPNet<0> {
     unsigned m_lambda;
     unsigned m_k;
     unsigned m_cycles = 0;
-    const double m_const_coeff;
-    const unsigned m_dimension;
+    double m_const_coeff;
+    unsigned m_dimension;
 
-    std::pair<double, double> threshold(size_t index, const NodeVector &x_vector);
+    std::pair<double, double> threshold(size_t index,
+                                        const NodeVector &x_vector);
 }; // class GPNet
 
 GPNet<0>::GPNet(unsigned dimension, unsigned lambda, unsigned age_max,
@@ -428,7 +447,7 @@ void GPNet<0>::train(vector_d &data) {
 } // namespace LogAnomaly
 
 std::pair<double, double> GPNet<0>::threshold(size_t index,
-                                            const NodeVector &x_vector) {
+                                              const NodeVector &x_vector) {
     using namespace Eigen;
 
     Matrix<double, Dynamic, Dynamic> local_cov(m_dimension, m_dimension);
@@ -492,9 +511,9 @@ std::pair<double, double> GPNet<0>::threshold(size_t index,
         for (auto edge : *iter) {
             NodeVector &node_vec = m_graph[edge.head].value().vector;
             double prob = std::exp(-((x_vector - node_vec).transpose() *
-                                    cov_inv * (x_vector - node_vec))(0) /
-                                  2) /
-                         m_const_coeff / determinant_sqrt;
+                                     cov_inv * (x_vector - node_vec))(0) /
+                                   2) /
+                          m_const_coeff / determinant_sqrt;
 
             if (prob < threshold)
                 threshold = prob;
@@ -503,9 +522,9 @@ std::pair<double, double> GPNet<0>::threshold(size_t index,
         threshold = 0.55;
 
     double xprob = std::exp(-((x_vector - winner_vec).transpose() * cov_inv *
-                             (x_vector - winner_vec))(0) /
-                           2) /
-                  m_const_coeff / determinant_sqrt;
+                              (x_vector - winner_vec))(0) /
+                            2) /
+                   m_const_coeff / determinant_sqrt;
     return {
         threshold,
         xprob,
@@ -537,7 +556,8 @@ double GPNet<0>::predict(vector_d &data) {
 
         SelfAdjointEigenSolver<Matrix<double, Dynamic, Dynamic>> eigens(
             local_cov);
-        double determinant_sqrt = std::sqrt(std::abs(eigens.eigenvalues().prod()));
+        double determinant_sqrt =
+            std::sqrt(std::abs(eigens.eigenvalues().prod()));
         Matrix<double, Dynamic, Dynamic> cov_inv =
             eigens.eigenvectors() *
             eigens.eigenvalues().array().inverse().matrix().asDiagonal() *
@@ -545,9 +565,9 @@ double GPNet<0>::predict(vector_d &data) {
 
         NodeVector &node_vec = node.value().vector;
         double xprob = std::exp(-((input - node_vec).transpose() * cov_inv *
-                                 (input - node_vec))(0) /
-                               2) /
-                      m_const_coeff / determinant_sqrt;
+                                  (input - node_vec))(0) /
+                                2) /
+                       m_const_coeff / determinant_sqrt;
         prob += xprob * node.value().win_count;
         wins += node.value().win_count;
     }
@@ -557,5 +577,28 @@ double GPNet<0>::predict(vector_d &data) {
     return prob;
 }
 } // namespace LogAnomaly
+
+namespace cereal {
+
+template <typename Archive>
+void save(Archive &archive,
+          Eigen::Matrix<double, Eigen::Dynamic, 1> const &vec) {
+    archive(vec.size());
+    for (unsigned i = 0; i != vec.size(); ++i)
+        archive(vec(i));
+}
+template <typename Archive>
+void load(Archive &archive, Eigen::Matrix<double, Eigen::Dynamic, 1> &vec) {
+    Eigen::Index sz;
+    archive(sz);
+    vec.resize(sz);
+    for (unsigned i = 0; i != vec.size(); ++i) {
+        double elem;
+        archive(elem);
+        vec(i) = elem;
+    }
+}
+
+} // namespace cereal
 
 #endif // LOG_ANOMALY_GPSOINN_HXX

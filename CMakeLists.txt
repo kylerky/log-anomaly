@@ -48,6 +48,7 @@ if (OPENMP_FOUND)
 endif()
 
 include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/cereal/include)
 
 add_definitions(-DNS_INFOMAP=1)
 
