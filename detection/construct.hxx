@@ -14,6 +14,8 @@
 #include "cereal/types/unordered_map.hpp"
 #include "cereal/types/utility.hpp"
 
+#include "tclap/CmdLine.h"
+
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -24,6 +26,7 @@
 #include <memory>
 #include <numeric>
 #include <sstream>
+#include <system_error>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -105,8 +108,8 @@ std::pair<std::vector<double>, unsigned> construct_gpnet_input(
 
 constexpr unsigned block_number = 5;
 constexpr unsigned block_size = 2500;
-constexpr float vertex_fade_coeff = 2.5;
-constexpr float edge_fade_coeff = 4;
+constexpr float vertex_fade_coeff = 2;
+constexpr float edge_fade_coeff = 1.5;
 constexpr unsigned vertex_fade_threshold = 1;
 constexpr unsigned edge_fade_threshold = 1;
 

@@ -5,9 +5,11 @@ extern "C" {
 #include <systemd/sd-journal.h>
 }
 #include <bitset>
+#include <map>
 #include <string>
 #include <system_error>
 #include <utility>
+#include <algorithm>
 
 namespace LogAnomaly {
 class SDJournal {
@@ -20,6 +22,7 @@ class SDJournal {
     };
 
   public:
+    typedef std::map<std::string, std::string> LogMap;
     // constructors
     explicit SDJournal(int flags = 0) {
         using std::generic_category;
@@ -51,9 +54,23 @@ class SDJournal {
 
     // operators
     friend SDJournal &operator>>(SDJournal &object, std::string &str);
+    friend SDJournal &operator>>(SDJournal &object, LogMap &map);
     SDJournal &operator=(SDJournal other) {
         std::swap(*this, other);
         return *this;
+    }
+
+    uint64_t get_realtime_usec() {
+        using std::generic_category;
+        using std::system_error;
+        uint64_t time_usec;
+        int result = sd_journal_get_realtime_usec(m_context, &time_usec);
+        if (result < 0) {
+            m_states[s_bad] = 1;
+            throw system_error(-result, generic_category(),
+                               "Failed to get realtime");
+        }
+        return time_usec;
     }
 
     uint64_t timeout() const { return m_timeout; }
