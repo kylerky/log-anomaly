@@ -77,6 +77,7 @@ int main(int argc, char *argv[]) {
     unordered_map<unsigned, ClusterInfo> clusters;
 
     string fname;
+    string cp_fname;
     ofstream output_stream;
 
     // arguments parsing
@@ -88,6 +89,9 @@ int main(int argc, char *argv[]) {
                                    false, "", "string (cursor)", cmd);
         ValueArg<string> outputArg("o", "output", "The file to write to", false,
                                    "", "string (path)", cmd);
+        ValueArg<string> checkpointFileArg(
+            "", "checkpoint-file", "The file to write the checkpoint", false,
+            "/tmp/log_anomaly.save", "string (path)", cmd);
         ValueArg<uint64_t> timeoutArg("", "timeout",
                                       "Set the timeout for the journal", false,
                                       0, "uint64_t (us)", cmd);
@@ -105,9 +109,10 @@ int main(int argc, char *argv[]) {
 
         cmd.parse(argc, argv);
 
+        cp_fname = checkpointFileArg.getValue();
         if (resumeSwitch.getValue()) {
             try {
-                ifstream checkpoint_if("/tmp/cp.bin", std::ios::binary);
+                ifstream checkpoint_if(cp_fname, std::ios::binary);
                 {
                     string cursor;
                     BinaryInputArchive archive(checkpoint_if);
@@ -289,7 +294,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (is_checkp) {
-            ofstream checkpoint_file("/tmp/cp.bin", std::ios::binary);
+            ofstream checkpoint_file(cp_fname, std::ios::binary);
             {
                 unsigned retrieval = retrieve_number;
                 if (is_online)
