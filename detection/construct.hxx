@@ -109,7 +109,7 @@ std::pair<std::vector<double>, unsigned> construct_gpnet_input(
 constexpr unsigned block_number = 5;
 constexpr unsigned block_size = 2500;
 constexpr float vertex_fade_coeff = 2;
-constexpr float edge_fade_coeff = 1.8;
+constexpr float edge_fade_coeff = 2.5;
 constexpr unsigned vertex_fade_threshold = 1;
 constexpr unsigned edge_fade_threshold = 1;
 

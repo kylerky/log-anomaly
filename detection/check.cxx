@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
         CmdLine cmd("Log viewer", ' ', "0.1");
 
         UnlabeledValueArg<string> filenameArg(
-            "path", "The path to the cursor file", true, "", "string", cmd);
+            "path", "The path to the cursor file", true, "", "path", cmd);
         cmd.parse(argc, argv);
         path = filenameArg.getValue();
     } catch (TCLAP::ArgException &e) {

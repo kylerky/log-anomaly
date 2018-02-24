@@ -546,11 +546,12 @@ void process_log(std::string log_text,
                 break;
 
             // constexpr unsigned WORD_LENGTH_MAX = 15;
-            // constexpr unsigned WORD_LENGTH_MIN = 2;
+            constexpr unsigned WORD_LENGTH_MIN = 2;
             word = stem(word);
             // if (word.size() > WORD_LENGTH_MAX || word.size() <
             // WORD_LENGTH_MIN)
-            //     break;
+            if (word.size() < WORD_LENGTH_MIN)
+                break;
             auto[iter, success] = word_map.insert({word, 0});
             if (success) {
                 auto ver_iter = word_graph.insert_vertex(
