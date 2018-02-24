@@ -178,11 +178,14 @@ int main(int argc, char *argv[]) {
                 }
                 // end of log text
             } else {
-                if (!journal.bad() && journal.eof()) {
-                    if (to_wait)
-                        --i;
-                    else
-                        break;
+                if (!journal.bad()) {
+                    if (to_wait) {
+                        if (journal.eof())
+                            --i;
+                        else
+                            break;
+                    } else
+                        goto end_loop;
                 } else {
                     cerr << "bad journal object" << endl;
                     return 3;
@@ -383,6 +386,7 @@ int main(int argc, char *argv[]) {
             }
         }
     }
+end_loop:
 
     return 0;
 }
