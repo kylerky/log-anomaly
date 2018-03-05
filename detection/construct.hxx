@@ -106,8 +106,8 @@ std::pair<std::vector<double>, unsigned> construct_gpnet_input(
         &word_graph,
     std::unordered_map<unsigned, ClusterInfo> &clusters);
 
-constexpr unsigned block_number = 5;
-constexpr unsigned block_size = 2500;
+constexpr unsigned block_number = 6;
+constexpr unsigned block_size = 2000;
 constexpr float vertex_fade_coeff = 2;
 constexpr float edge_fade_coeff = 2.5;
 constexpr unsigned vertex_fade_threshold = 1;

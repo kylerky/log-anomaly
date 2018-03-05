@@ -162,7 +162,7 @@ class Ncurses {
   public:
     Ncurses() {
         initscr();              // start curses mode
-        raw();                  // disable line buffer
+        cbreak();                  // disable line buffer
         noecho();               // hide echo characters
         keypad(stdscr, TRUE);   // get keys
         cscr = NWindow(stdscr); // construct cscr
@@ -197,7 +197,11 @@ class Viewer {
         return true;
     }
     void scrollX(int n);
-    void scrollXbeg() { scrollX(-m_beg_x); }
+    void scrollXbeg() {
+        scrollX(-m_beg_x);
+        auto[x, y] = m_buffer_view.getXY();
+        moveCursor(-x);
+    }
     void moveCursor(int delta_x, int delta_y = 0);
     void paint();
     void switchInfo();

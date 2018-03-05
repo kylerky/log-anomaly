@@ -133,7 +133,7 @@ void Viewer::moveCursor(int delta_x, int delta_y) {
         if (m_beg_x) {
             if (!m_cluster || index != m_log_index) {
                 m_beg_x = 0;
-                paint(orig_y);
+                scrollX(0);
             } else {
                 dest_x = 4;
                 scrollX(line_length - m_beg_x - dest_x);
@@ -226,7 +226,7 @@ unsigned Viewer::fetch(unsigned log_cnt) {
                 string line = info.str();
                 bool first = true;
                 for (size_t i = 0; i != text.size();) {
-                    auto pos = text.find('\n');
+                    auto pos = text.find('\n', i);
                     if (pos == string::npos) {
                         line.append(text.substr(i));
                         m_lines.push_back(line);
@@ -285,12 +285,13 @@ void Viewer::scrollX(int n) {
         return;
 
     size_t refresh_beg = beg > m_beg_y ? beg - m_beg_y : 0;
-    size_t refresh_end = end < m_beg_y + max_y ? end - m_beg_y : max_y;
+    size_t refresh_end =
+        end < m_beg_y + max_y ? end - m_beg_y : m_beg_y + max_y - 1;
     for (size_t i = refresh_beg; i != refresh_end; ++i) {
         // m_buffer_view.mvAdd(0, refresh_beg,
         //                     m_lines[refresh_beg + m_beg_y].substr(dest_x),
         //                     max_x);
-        size_t line_n = refresh_beg + m_beg_y;
+        size_t line_n = i + m_beg_y;
         string &str = (*m_buffer)[line_n];
         if (str.size() <= dest_x) {
             m_buffer_view.clearToEol(0, line_n);
@@ -304,7 +305,7 @@ void Viewer::scrollX(int n) {
         // for (auto &ch : m_lines[refresh_beg + m_beg_y])
         //     format_str.push_back(ch);
 
-        m_buffer_view.mvAddCh(0, i, format_str);
+        m_buffer_view.mvAddCh(0, line_n, format_str);
 
         if (format_str.size() < max_x)
             m_buffer_view.clearToEol(format_str.size(), line_n);
@@ -324,7 +325,7 @@ void Viewer::switchInfo() {
     m_beg_x = 0;
     m_beg_y = 0;
 
-    auto &cursor = m_cursors[m_pre_beg_y + curr_y];
+    auto &cursor = m_cursors[m_indices[m_pre_beg_y + curr_y]];
     m_journal.seekg(cursor);
     SDJournal::LogMap log_map;
     m_journal >> log_map;
@@ -341,7 +342,7 @@ void Viewer::switchInfo() {
         string line = field;
         bool first = true;
         for (size_t i = 0; i != text.size();) {
-            auto pos = text.find('\n');
+            auto pos = text.find('\n', i);
             if (pos == string::npos) {
                 line.append(text.substr(i));
                 m_log_lines.push_back(line);
