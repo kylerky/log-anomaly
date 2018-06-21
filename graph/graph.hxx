@@ -16,7 +16,7 @@ namespace LogAnomaly {
 
 template <typename ValueT, typename WeightT,
           typename Compare = std::less<ValueT>,
-          typename Allocator = std::allocator<ValueT>>
+          typename Alloc = std::allocator<ValueT>>
 class Digraph {
   public:
     typedef typename multiset<ValueT, Compare>::size_type index_t;
@@ -81,6 +81,7 @@ class Digraph {
         std::forward_list<EdgeNode> edges;
     };
 
+    typedef typename std::allocator<multiset_variant<size_t, Vertex>> Allocator;
     // loads of typedefs
     typedef multiset<Vertex, Compare, Allocator> set_type;
 
